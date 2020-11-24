@@ -6,62 +6,48 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
 
 public class Server {
-    private static ArrayList<Clienthandler> clients = new ArrayList<>();
-    private static ExecutorService pool = Executors.newFixedThreadPool(4);
     private static final int PORT = 9876;
+    public static DatagramPacket receivePacket;
+    public static int receivePort;
+    public static InetAddress receiveAddress;
+    public static void main(String[] args) throws Exception{
+        DatagramSocket serverSocket = new DatagramSocket(9876);
+         System.out.println("Server started");
+        ClientHandler clientHandler = new ClientHandler(serverSocket);
+        while (true) {
+                byte[] receiveData = new byte[1024];
+                receivePacket = new DatagramPacket(receiveData, receiveData.length);
+                serverSocket.receive(receivePacket);
+                String msg = new String(receivePacket.getData());
+                receivePort = receivePacket.getPort();
+                receiveAddress = receivePacket.getAddress();
+            System.out.println("add"+receivePacket.getAddress());
+            System.out.println("port"+receivePacket.getPort());
 
-    public static void main(String[] args) {
-        try {
-            while (true) {
-                DatagramSocket serverSocket = new DatagramSocket(9876);
-                System.out.println("Server started");
-                Clienthandler clientThread = new Clienthandler(serverSocket);
-                clients.add(clientThread);
-                pool.execute(clientThread);
+            ClientHandler.temp = ClientHandler.temp + msg+ "\n";
+                ClientHandler.content.setText(ClientHandler.temp);
             }
-        }
-        catch (IOException e) {
-            System.out.println(e);
-        }
-
     }
 
 }
-class Clienthandler extends JFrame implements Runnable, ActionListener {
+class ClientHandler extends JFrame implements ActionListener {
 
     private JFrame main;
     private JButton sendButton;
     private TextField chat;
     private JScrollPane sp;
-    private JTextArea content;
+    public static JTextArea content;
     private DatagramSocket ds;
-    private DatagramPacket receivePacket;
-    String temp="";
-    public Clienthandler(DatagramSocket client) {
+    public static String temp="";
+    public ClientHandler(DatagramSocket client) {
         super("Server Side");
         GUI();
         this.ds = client;
     }
-    @Override
-    public void run()  {
-            while(true) {
-                    byte[] receiveData = new byte[1024];
-                    receivePacket = new DatagramPacket(receiveData, receiveData.length);
-                try {
-                    ds.receive(receivePacket);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                String msg = new String(receivePacket.getData());
-                    temp = temp + msg+ "\n";
-                    content.setText(temp);
-            }
-    }
+
 
     public void GUI() {
         main = new JFrame();
@@ -93,9 +79,7 @@ class Clienthandler extends JFrame implements Runnable, ActionListener {
                 byte[] sendData = new byte[1024];
                 String sendMsg = "[SERVER]: "+ chat.getText();
                 sendData = sendMsg.getBytes();
-                InetAddress inetAddress = receivePacket.getAddress();
-                int port = receivePacket.getPort();
-                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, inetAddress, port);
+                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, Server.receiveAddress, Server.receivePort);
             try {
                 ds.send(sendPacket);
             } catch (IOException ioException) {

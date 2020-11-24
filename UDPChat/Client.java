@@ -8,8 +8,7 @@ import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.Socket;
-import java.util.*;
+
 public class Client extends JFrame implements ActionListener {
 
     private JFrame login, main;
@@ -26,18 +25,17 @@ public class Client extends JFrame implements ActionListener {
     public Client(String title) throws IOException, ClassNotFoundException {
         super(title);
         GUI();
-        ds = new DatagramSocket();
-        inetAddress = InetAddress.getByName("localhost");
-        byte[] sendData = new byte[1024];
-        byte[] receiveData = new byte[1024];
         while (true) {
+            ds = new DatagramSocket();
+            inetAddress = InetAddress.getByName("localhost");
+            byte[] sendData = new byte[1024];
+            byte[] receiveData = new byte[1024];
             DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
             ds.receive(receivePacket);
             String serverResponse = new String(receivePacket.getData());
             temp = temp + serverResponse+ "\n";
             content.setText(temp);
             System.out.println(serverResponse);
-            receiveData = new byte[1024];
         }
     }
     public void GUI() {
